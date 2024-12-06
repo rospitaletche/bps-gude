@@ -503,3 +503,71 @@ body {
   text-decoration: underline;
 }
 
+
+
+/* Estilos para FilterOptions */
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.filter-options label {
+  position: relative;
+}
+
+.filter-options input[type="radio"] {
+  display: none; /* Ocultar los radios */
+}
+
+.filter-options label::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 40px;
+  background-color: var(--color-fondo);
+  border: 1px solid var(--color-primario-oscuro);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.filter-options label span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-texto);
+  font-family: 'Lato', sans-serif;
+  pointer-events: none;
+}
+
+.filter-options input[type="radio"]:checked + label::before {
+  background-color: var(--color-secundario);
+  border-color: var(--color-secundario);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.filter-options input[type="radio"]:checked + label span {
+  color: #ffffff;
+}
+
+.filter-options label:hover::before {
+  background-color: var(--color-acentuado);
+  border-color: var(--color-acentuado);
+  cursor: pointer;
+}
+
+.filter-options label:hover span {
+  color: #ffffff;
+}
+
+.filter-options input[type="radio"]:checked + label::before {
+  background-color: var(--color-secundario);
+  border-color: var(--color-secundario);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: scale(1.02); /* Pequeño crecimiento */
+}

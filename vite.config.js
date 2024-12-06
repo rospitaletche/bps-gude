@@ -8,5 +8,9 @@ export default defineConfig({
     hmr: {
       overlay: false
     }
-  }
+  },
+  base: '/bps-gude/',
+  build: {
+    outDir: 'docs', // Si estás usando 'docs' para GitHub Pages
+  },
 })

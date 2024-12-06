@@ -2,34 +2,9 @@
 import React from 'react';
 
 const ResultCard = ({ item }) => {
-  // Obtener las variables de entorno
-  const PLAZO_JC = parseInt(import.meta.env.VITE_PLAZO_JC);
-  const PLAZO_PCUC = parseInt(import.meta.env.VITE_PLAZO_PCUC);
-  const PLAZO_AVISO = parseInt(import.meta.env.VITE_PLAZO_AVISO);
-
-  let styleOption = ''; // 'info', 'danger' o ''
-
-  // Asegurarse de que los valores sean numéricos
-  const codTipoSolicitud = parseInt(item.cod_tipo_solicitud);
-  const diasAtraso = parseInt(item.dias_atraso);
-
-  // Determinar la opción de estilo según las condiciones
-  if (codTipoSolicitud === 9) {
-    if (diasAtraso >= PLAZO_PCUC) {
-      styleOption = 'danger';
-    } else if (diasAtraso >= PLAZO_PCUC - PLAZO_AVISO) {
-      styleOption = 'info';
-    }
-  } else if ([1, 25, 26].includes(codTipoSolicitud)) {
-    if (diasAtraso >= PLAZO_JC) {
-      styleOption = 'danger';
-    } else if (diasAtraso >= PLAZO_JC - PLAZO_AVISO) {
-      styleOption = 'info';
-    }
-  }
-
+  // item.styleOption puede ser 'info', 'danger' o ''
   return (
-    <div className={`result-card ${styleOption}`}>
+    <div className={`result-card ${item.styleOption || ''}`}>
       <div className="gap-data">
         <div className="gap-item">
           <span className="label">Documento:</span> {item.nro_doc}

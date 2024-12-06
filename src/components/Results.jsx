@@ -13,9 +13,13 @@ const Results = () => {
   const apiaData = useSelector((state) => state.data.apiaData);
   const processedData = useSelector((state) => state.data.processedData);
   const processingData = useSelector((state) => state.data.processingData);
+  const filterOption = useSelector((state) => state.ui.filterOption);
+
+  const PLAZO_JC = parseInt(import.meta.env.VITE_PLAZO_JC);
+  const PLAZO_PCUC = parseInt(import.meta.env.VITE_PLAZO_PCUC);
+  const PLAZO_AVISO = parseInt(import.meta.env.VITE_PLAZO_AVISO);
 
   useEffect(() => {
-    // Solo procesar si tenemos tanto ringData como apiaData cargados
     if (ringData.length > 0 && apiaData.length > 0) {
       dispatch(setProcessingData(true)); // Inicia el procesamiento
 
@@ -53,15 +57,28 @@ const Results = () => {
             ? parseDate(fechaSolicitud)
             : null;
 
+          const atraso = parsedFechaSolicitud
+            ? diasAtraso(parsedFechaSolicitud)
+            : 0;
+
+          // Determinar el styleOption basándonos en la lógica
+          const codTipo = parseInt(ringItem['cod_tipo_solicitud'], 10);
+          let styleOption = '';
+          if (codTipo === 9) {
+            if (atraso >= PLAZO_PCUC) styleOption = 'danger';
+            else if (atraso >= PLAZO_PCUC - PLAZO_AVISO) styleOption = 'info';
+          } else if ([1, 25, 26].includes(codTipo)) {
+            if (atraso >= PLAZO_JC) styleOption = 'danger';
+            else if (atraso >= PLAZO_JC - PLAZO_AVISO) styleOption = 'info';
+          }
+
           return {
             nro_doc: formatDocumento(nroDoc),
             nombre: `${ringItem['nomb_1']} ${ringItem['nomb_2']} ${ringItem['apel_1']} ${ringItem['apel_2']}`,
             fecha_solicitud: parsedFechaSolicitud
               ? parsedFechaSolicitud.toLocaleDateString('es-ES')
               : 'Fecha no disponible',
-            dias_atraso: parsedFechaSolicitud
-              ? diasAtraso(parsedFechaSolicitud)
-              : 0,
+            dias_atraso: atraso,
             apiaMatches: apiaMatches.map((apiaItem) => ({
               nro_expediente: apiaItem['Nro. expediente'],
               usuario_actual: apiaItem['Usuario actual'],
@@ -69,6 +86,7 @@ const Results = () => {
             })),
             desc_tipo_solic: ringItem['desc_tipo_solic'],
             cod_tipo_solicitud: ringItem['cod_tipo_solicitud'],
+            styleOption, // Guardamos el estilo calculado
           };
         })
         .filter((item) => item !== null);
@@ -76,15 +94,12 @@ const Results = () => {
       // Ordenar el resultado por días de atraso
       result.sort((a, b) => a.dias_atraso - b.dias_atraso);
 
-      // Forzar un retraso de 1 segundo antes de mostrar los resultados
       setTimeout(() => {
-        dispatch(setProcessedData(result)); // Esto pone processingData = false en el reducer
+        dispatch(setProcessedData(result));
       }, 1000);
     }
-  }, [ringData, apiaData, dispatch]);
+  }, [ringData, apiaData, dispatch, PLAZO_JC, PLAZO_PCUC, PLAZO_AVISO]);
 
-  // Lógica para mostrar contenido:
-  // 1. Si estamos procesando, mostrar el spinner.
   if (processingData) {
     return (
       <div className="result-container">
@@ -93,18 +108,26 @@ const Results = () => {
     );
   }
 
-  // 2. Si no estamos procesando y tenemos datos, mostrarlos:
-  if (processedData.length > 0) {
+  // Filtrado según filterOption
+  let filteredData = processedData;
+  if (filterOption === 'info') {
+    // Solo los que tienen styleOption === 'info'
+    filteredData = processedData.filter((item) => item.styleOption === 'info');
+  } else if (filterOption === 'safe') {
+    // Todos menos los que tienen styleOption === 'danger'
+    filteredData = processedData.filter((item) => item.styleOption !== 'danger');
+  }
+
+  if (filteredData.length > 0) {
     return (
       <div className="result-container">
-        {processedData.map((item, index) => (
+        {filteredData.map((item, index) => (
           <ResultCard key={index} item={item} />
         ))}
       </div>
     );
   }
 
-  // 3. Si no estamos procesando y no hay datos, mostrar el mensaje por defecto:
   return (
     <div className="result-container">
       <p>No hay datos para mostrar.</p>
@@ -113,4 +136,3 @@ const Results = () => {
 };
 
 export default Results;
-
