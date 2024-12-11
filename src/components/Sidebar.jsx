@@ -1,7 +1,8 @@
 // src/components/Sidebar.jsx
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { toggleSidebar, setSelectedSidebarItem } from '../store/uiSlice';
+import { menus } from '../config/menus.js';
+import { toggleSidebar, setSelectedSidebarItem, setSelectedHeaderItem, setSelectedPage } from '../store/uiSlice';
 
 function Sidebar() {
   const dispatch = useDispatch();
@@ -14,6 +15,10 @@ function Sidebar() {
 
   const handleSelectItem = (itemName) => {
     dispatch(setSelectedSidebarItem(itemName));
+    // Tomar el primer ítem del menú correspondiente
+    const firstHeaderItem = menus[itemName][0];
+    dispatch(setSelectedHeaderItem(firstHeaderItem.text));
+    dispatch(setSelectedPage(firstHeaderItem.page));
   };
 
   const getItemClass = (itemName) => {

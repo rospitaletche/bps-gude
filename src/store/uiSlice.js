@@ -5,6 +5,8 @@ const initialState = {
   sidebarCollapsed: true,
   selectedSidebarItem: null,
   selectedHeaderItem: null,
+  selectedPage: null,
+
   filterOption: 'all', // 'all', 'info', 'safe'
 };
 
@@ -23,6 +25,9 @@ const uiSlice = createSlice({
     setSelectedHeaderItem(state, action) {
       state.selectedHeaderItem = action.payload;
     },
+    setSelectedPage(state, action) {
+      state.selectedPage = action.payload;
+    },
     setFilterOption(state, action) {
       state.filterOption = action.payload;
     },
@@ -33,6 +38,7 @@ export const {
   toggleSidebar,
   setSelectedSidebarItem,
   setSelectedHeaderItem,
+  setSelectedPage,
   setFilterOption,
 } = uiSlice.actions;
 

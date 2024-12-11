@@ -1,19 +1,20 @@
 // src/config/menus.js
-const menus = {
+export const menus = {
+  Inicio: [
+    { text: "Dashboard", page: "Home" }
+  ],
   Informes: [
-    { text: "Pasivos" },
-    { text: "Activos" },
-    { text: "Adm Y P" }
+    { text: "Pasivos", page: "InformePasivos" },
+    { text: "Activos", page: "InformeActivos" },
+    { text: "Adm Y P", page: "InformeAdm" }
   ],
   Atención: [
-    { text: "Opción A" },
-    { text: "Opción B" }
+    { text: "Opción A", page: "AtencionA" },
+    { text: "Opción B", page: "AtencionB" }
   ],
   // Menú por defecto (cuando no hay sidebar seleccionado o no coincide)
   default: [
-    { text: "Pasivos" },
-    { text: "Activos" }
+    { text: "Pasivos", page: "InformePasivos" },
+    { text: "Activos", page: "InformeActivos" }
   ]
 };
-
-export default menus;

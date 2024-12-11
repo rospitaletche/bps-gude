@@ -11,13 +11,3 @@
 3) Realizar el push para que se suba la carpeta 'docs'
 4) En github seleccionar Page, seleccionar main > docs 
 5) Save
-
-
-
-
-
-
-
-
-
-

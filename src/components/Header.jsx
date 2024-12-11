@@ -1,9 +1,9 @@
 // src/components/Header.jsx
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { toggleSidebar, setSelectedHeaderItem } from '../store/uiSlice';
+import { toggleSidebar, setSelectedHeaderItem, setSelectedPage } from '../store/uiSlice';
 import logo from '../assets/logo.png';
-import menus from '../config/menus';
+import { menus } from '../config/menus';
 
 function Header() {
   const dispatch = useDispatch();
@@ -19,6 +19,10 @@ function Header() {
 
   const handleHeaderItemClick = (itemText) => {
     dispatch(setSelectedHeaderItem(itemText));
+    const menuItem = currentMenu.find(m => m.text === itemText);
+    if (menuItem) {
+      dispatch(setSelectedPage(menuItem.page));
+    }
   };
 
   return (
