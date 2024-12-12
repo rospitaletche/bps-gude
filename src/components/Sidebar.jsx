@@ -40,6 +40,10 @@ function Sidebar() {
           <i className="sidebar__icon fa fa-person"></i>
           <span className="sidebar__text">Atención</span>
         </li>
+        <li className={getItemClass('Oficios')} onClick={() => handleSelectItem('Oficios')}>
+          <i className="sidebar__icon fa fa-feather"></i>
+          <span className="sidebar__text">Oficios</span>
+        </li>
         {/* Botón para expandir/colapsar la barra lateral */}
         <li className="sidebar__item sidebar__toggle-btn" onClick={handleToggleClick}>
           <i className={`fa ${collapsed ? 'fa-angle-right' : 'fa-angle-left'}`}></i>

@@ -505,69 +505,86 @@ body {
 
 
 
-/* Estilos para FilterOptions */
+/* src/components/FilterOptions.css */
+
 .filter-options {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
   margin-top: 20px;
 }
 
-.filter-options label {
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-option input[type="radio"] {
+  display: none; /* Ocultar el radio button nativo */
+}
+
+.filter-option label {
   position: relative;
+  padding-left: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--color-texto);
+  font-family: 'Lato', sans-serif;
+  user-select: none;
 }
 
-.filter-options input[type="radio"] {
-  display: none; /* Ocultar los radios */
-}
-
-.filter-options label::before {
+/* Círculo exterior */
+.filter-option label::before {
   content: '';
-  display: block;
-  width: 100%;
-  height: 40px;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-primario-oscuro);
+  border-radius: 50%;
   background-color: var(--color-fondo);
-  border: 1px solid var(--color-primario-oscuro);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
 
-.filter-options label span {
+/* Círculo interior (visible cuando está seleccionado) */
+.filter-option label::after {
+  content: '';
   position: absolute;
+  left: 5px;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--color-texto);
-  font-family: 'Lato', sans-serif;
-  pointer-events: none;
-}
-
-.filter-options input[type="radio"]:checked + label::before {
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
   background-color: var(--color-secundario);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Cuando el radio está seleccionado */
+.filter-option input[type="radio"]:checked + label::after {
+  opacity: 1;
+}
+
+/* Cambiar el color del círculo exterior cuando está seleccionado */
+.filter-option input[type="radio"]:checked + label::before {
   border-color: var(--color-secundario);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.filter-options input[type="radio"]:checked + label span {
-  color: #ffffff;
-}
-
-.filter-options label:hover::before {
+/* Efecto hover */
+.filter-option label:hover::before {
   background-color: var(--color-acentuado);
   border-color: var(--color-acentuado);
-  cursor: pointer;
 }
 
-.filter-options label:hover span {
-  color: #ffffff;
+.filter-option label:hover::after {
+  opacity: 1;
 }
 
-.filter-options input[type="radio"]:checked + label::before {
-  background-color: var(--color-secundario);
-  border-color: var(--color-secundario);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  transform: scale(1.02); /* Pequeño crecimiento */
+/* Transición suave para el círculo interior */
+.filter-option label::after {
+  transition: opacity 0.3s ease;
 }

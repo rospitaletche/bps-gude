@@ -14,41 +14,47 @@ const FilterOptions = () => {
 
   return (
     <div className="filter-options">
-      <input
-        type="radio"
-        id="all"
-        name="filterOption"
-        value="all"
-        checked={filterOption === 'all'}
-        onChange={handleChange}
-      />
-      <label htmlFor="all">
-        <span>Todos los registros</span>
-      </label>
+      <div className="filter-option">
+        <input
+          type="radio"
+          id="all"
+          name="filterOption"
+          value="all"
+          checked={filterOption === 'all'}
+          onChange={handleChange}
+        />
+        <label htmlFor="all">
+          <span>Todos los registros</span>
+        </label>
+      </div>
 
-      <input
-        type="radio"
-        id="info"
-        name="filterOption"
-        value="info"
-        checked={filterOption === 'info'}
-        onChange={handleChange}
-      />
-      <label htmlFor="info">
-        <span>Faltan menos de {PLAZO_AVISO} días</span>
-      </label>
+      <div className="filter-option">
+        <input
+          type="radio"
+          id="info"
+          name="filterOption"
+          value="info"
+          checked={filterOption === 'info'}
+          onChange={handleChange}
+        />
+        <label htmlFor="info">
+          <span>Faltan menos de {PLAZO_AVISO} días</span>
+        </label>
+      </div>
 
-      <input
-        type="radio"
-        id="safe"
-        name="filterOption"
-        value="safe"
-        checked={filterOption === 'safe'}
-        onChange={handleChange}
-      />
-      <label htmlFor="safe">
-        <span>Están al día</span>
-      </label>
+      <div className="filter-option">
+        <input
+          type="radio"
+          id="safe"
+          name="filterOption"
+          value="safe"
+          checked={filterOption === 'safe'}
+          onChange={handleChange}
+        />
+        <label htmlFor="safe">
+          <span>Están al día</span>
+        </label>
+      </div>
     </div>
   );
 };

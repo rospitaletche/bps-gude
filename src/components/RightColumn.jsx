@@ -13,10 +13,10 @@ function RightColumn({page}) {
           <FilterOptions />
         </section>
       );
-    case 'Informe2Page':
-      return <div>Contenido Informe 2 - Columna Izquierda</div>;
-    case 'AtencionPage':
-      return <div>Contenido Atención - Columna Izquierda</div>;
+    case 'AtencionActivos':
+      return <div>Archivos rertornados</div>;
+    case 'OficiosJudiciales':
+      return <div>Ver...</div>;
     // ...otros casos...
     default:
       return <div>Selecciona una opción.</div>;

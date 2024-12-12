@@ -18,28 +18,16 @@ function MainContent() {
           <RightColumn page="InformePasivos" />
         </>
       )}
-      {selectedPage === 'Informe2Page' && (
+      {selectedPage === 'AtencionActivos' && (
         <>
-          <LeftColumn page="Informe2Page" />
-          <RightColumn page="Informe2Page" />
+          <LeftColumn page="AtencionActivos" />
+          <RightColumn page="AtencionActivos" />
         </>
       )}
-      {selectedPage === 'AtencionPage' && (
+      {selectedPage === 'OficiosJudiciales' && (
         <>
-          <LeftColumn page="AtencionPage" />
-          <RightColumn page="AtencionPage" />
-        </>
-      )}
-      {selectedPage === 'ResumenPage' && (
-        <>
-          <LeftColumn page="ResumenPage" />
-          <RightColumn page="ResumenPage" />
-        </>
-      )}
-      {selectedPage === 'NovedadesPage' && (
-        <>
-          <LeftColumn page="NovedadesPage" />
-          <RightColumn page="NovedadesPage" />
+          <LeftColumn page="OficiosJudiciales" />
+          <RightColumn page="OficiosJudiciales" />
         </>
       )}
       {/* ...otros casos... */}

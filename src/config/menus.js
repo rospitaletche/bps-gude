@@ -9,8 +9,10 @@ export const menus = {
     { text: "Adm Y P", page: "InformeAdm" }
   ],
   Atención: [
-    { text: "Opción A", page: "AtencionA" },
-    { text: "Opción B", page: "AtencionB" }
+    { text: "Activos", page: "AtencionActivos" },
+  ],
+  Oficios: [
+    { text: "Judiciales", page: "OficiosJudiciales" }
   ],
   // Menú por defecto (cuando no hay sidebar seleccionado o no coincide)
   default: [
