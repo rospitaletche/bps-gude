@@ -669,3 +669,36 @@ button[type="submit"]:hover {
 button[type="submit"]:active {
   background-color: #006f8f;
 }
+
+
+
+.reporte-ring {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Lato', sans-serif;
+}
+
+.reporte-ring h2 {
+  color: var(--color-primario);
+  margin-bottom: 15px;
+}
+
+.reporte-ring ul {
+  list-style: none;
+  padding: 0;
+}
+
+.reporte-ring li {
+  font-size: 16px;
+  color: var(--color-texto);
+  margin-bottom: 10px;
+}
+
+.reporte-ring strong {
+  color: var(--color-secundario);
+  font-weight: bold;
+}

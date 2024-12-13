@@ -2,6 +2,7 @@
 import React from 'react';
 import FileUploader from './FileUploader';
 import FilterOptions from './FilterOptions';
+import ReporteRing from './ReporteRing';
 
 function RightColumn({page}) {
   switch (page) {
@@ -11,6 +12,7 @@ function RightColumn({page}) {
           <h2 className="heading-secondary">Cargar Archivos</h2>
           <FileUploader />
           <FilterOptions />
+          <ReporteRing />
         </section>
       );
     case 'AtencionActivos':
