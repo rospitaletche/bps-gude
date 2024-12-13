@@ -588,3 +588,84 @@ body {
 .filter-option label::after {
   transition: opacity 0.3s ease;
 }
+
+
+
+/* src/components/LoginPage.css */
+
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Altura completa de la ventana */
+  background-color: var(--color-fondo);
+}
+
+.login-form {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 40px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  max-width: 90%;
+}
+
+.login-form h2 {
+  text-align: center;
+  color: var(--color-primario);
+  margin-bottom: 30px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+.form-group select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  font-family: var(--fuente-secundaria);
+}
+
+.form-group select:focus {
+  outline: none;
+  border-color: var(--color-secundario);
+  box-shadow: 0 0 5px rgba(0, 172, 231, 0.5);
+}
+
+.error-message {
+  color: var(--color-danger);
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--color-secundario);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-family: var(--fuente-principal);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button[type="submit"]:hover {
+  background-color: #008bb5; /* Tono más oscuro */
+}
+
+button[type="submit"]:active {
+  background-color: #006f8f;
+}
