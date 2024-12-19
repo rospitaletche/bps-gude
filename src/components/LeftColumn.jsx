@@ -1,6 +1,7 @@
 // src/components/LeftColumn.jsx
 import React from 'react';
 import Results from './Results';
+import AsignacionDobleForm from './AsignacionDobleForm';
 
 function LeftColumn({ page }) {
     switch (page) {
@@ -23,7 +24,8 @@ function LeftColumn({ page }) {
         return (
           <section className="container__left-column">
             <h1 className="heading-primary">Asignación doble</h1>
-            <p>Infromación Personal</p>
+            <p>Complete la información para generar el documento:</p>
+            <AsignacionDobleForm />
           </section>
         );
       // ...otros casos...

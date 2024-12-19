@@ -8,6 +8,7 @@ const initialState = {
   loadingRing: false,
   loadingApia: false,
   processingData: false,
+  generatedDocument: null, // Nuevo estado para almacenar la URL del documento
 };
 
 const dataSlice = createSlice({
@@ -35,6 +36,12 @@ const dataSlice = createSlice({
     setProcessingData(state, action) {
       state.processingData = action.payload;
     },
+    setGeneratedDocument(state, action) {
+      state.generatedDocument = action.payload;
+    },
+    resetGeneratedDocument(state) {
+      state.generatedDocument = null;
+    },
   },
 });
 
@@ -45,6 +52,8 @@ export const {
   setLoadingRing,
   setLoadingApia,
   setProcessingData,
+  setGeneratedDocument, // Nueva acción
+  resetGeneratedDocument, // Nueva acción opcional
 } = dataSlice.actions;
 
 export default dataSlice.reducer;
