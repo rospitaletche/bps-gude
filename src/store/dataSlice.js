@@ -2,30 +2,40 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
+  // Primer RING
   ringData: [],
   apiaData: [],
   processedData: [],
   loadingRing: false,
   loadingApia: false,
   processingData: false,
-  generatedDocument: null, // Nuevo estado para almacenar la URL del documento
+
+  // Segundo RING: Pensión Vejez (PV) y Pensión Invalidez (PI)
+  ringPVData: [],    // Hoja 0
+  ringPIData: [],    // Hoja 1
+  loadingRingPV: false,
+  loadingRingPI: false,
+
+  // Documento generado
+  generatedDocument: null,
 };
 
 const dataSlice = createSlice({
   name: 'data',
   initialState,
   reducers: {
+    // Primer RING
     setRingData(state, action) {
       state.ringData = action.payload;
-      state.loadingRing = false; // Termina la carga
+      state.loadingRing = false;
     },
     setApiaData(state, action) {
       state.apiaData = action.payload;
-      state.loadingApia = false; // Termina la carga
+      state.loadingApia = false;
     },
     setProcessedData(state, action) {
       state.processedData = action.payload;
-      state.processingData = false; // Termina el procesamiento
+      state.processingData = false;
     },
     setLoadingRing(state, action) {
       state.loadingRing = action.payload;
@@ -36,6 +46,24 @@ const dataSlice = createSlice({
     setProcessingData(state, action) {
       state.processingData = action.payload;
     },
+
+    // Segundo RING
+    setRingPVData(state, action) {
+      state.ringPVData = action.payload;
+      state.loadingRingPV = false;
+    },
+    setRingPIData(state, action) {
+      state.ringPIData = action.payload;
+      state.loadingRingPI = false;
+    },
+    setLoadingRingPV(state, action) {
+      state.loadingRingPV = action.payload;
+    },
+    setLoadingRingPI(state, action) {
+      state.loadingRingPI = action.payload;
+    },
+
+    // Documento
     setGeneratedDocument(state, action) {
       state.generatedDocument = action.payload;
     },
@@ -52,8 +80,14 @@ export const {
   setLoadingRing,
   setLoadingApia,
   setProcessingData,
-  setGeneratedDocument, // Nueva acción
-  resetGeneratedDocument, // Nueva acción opcional
+
+  setRingPVData,
+  setRingPIData,
+  setLoadingRingPV,
+  setLoadingRingPI,
+
+  setGeneratedDocument,
+  resetGeneratedDocument,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

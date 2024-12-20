@@ -53,10 +53,13 @@ const FileUploader = () => {
           accept=".xlsx, .xls"
           onChange={(e) => handleRingUpload(e.target.files[0])}
         />
-        <button onClick={() => triggerFileInput('ring-upload')}>
-          {loadingRing ? 'Cargando...' : 'Subir Archivo RING'}
+        <button 
+          className="btn btn-secondary"
+          onClick={() => triggerFileInput('ring-upload')}>
+          {loadingRing ? 'Cargando...' : 'Jubilaciones'}
         </button>
       </div>
+      <hr />
       <div className="upload-button">
         <label htmlFor="apia-upload"></label>
         <input
@@ -65,8 +68,11 @@ const FileUploader = () => {
           accept=".xlsx, .xls"
           onChange={(e) => handleApiaUpload(e.target.files[0])}
         />
-        <button onClick={() => triggerFileInput('apia-upload')}>
-          {loadingApia ? 'Cargando...' : 'Subir Archivo APIA'}
+        <button 
+          className="btn btn-secondary btn-primary--complementary"
+          onClick={() => triggerFileInput('apia-upload')}
+        >
+          {loadingApia ? 'Cargando...' : 'Subir archivo APIA'}
         </button>
       </div>
     </div>

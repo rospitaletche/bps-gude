@@ -1498,6 +1498,12 @@ Te voy a pasar tambien los estilos que vengo usando. Para que el diseño siga un
 
 
 
+
+
+
+
+
+
 Esto es lo que me retorna, asi como esta. Creo que no esta encontrando el archivo de template.docx
 '''
 AsignacionDobleForm.jsx:37 
@@ -2803,3 +2809,587 @@ Un detalle que he notado es que el campo 'nro_doc', en la hoja 2, se ve mal: 'no
 
 Puedes ayudarme con esto?
 Te pido por favor que me pases los archivos completos.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+No quede muy conforme con como quedó la modificación.
+Quisiera cambiar un poco
+
+Podemos modificar los archivos para que no se utilice el select (entre hoja 1 y hoja 2)
+En su lugar, que se utilice 2 botones. [Pension Invalidez] y [Pension Vejez]
+
+Aparecerian 3 botones:
+En que se venia usando hasta ahora que funcionaba bien: 
+
+[Subir Archivo RING]
+
+[Pension Vejez]
+[Pension Invalidez]
+
+Luego, los radio buttons de filtros serian los mismos para ambos
+El cuadro de Reporte seria el mismo para ambos
+
+Cuando subo el APIA, deberia actualizar tambien los resultados de [Pension Vejez] y [Pension Invalidez]
+
+....
+
+Por otro lado, asi como esta, no esta funcionando. Por lo que te pediria que reveas el codigo. No esta subiendo el archivo, o por lo menos no lo esta mostrando
+Te voy a pasar la info que contiene el archivo:
+# Hoja 1:
+nro_doc	apel_1	apel_2	nomb_1	nomb_2	fecha_nac	fecha_fallec	nro_solicitud	fecha_solicitud	fecha_estado	usuario_id	cod_agencia	usuaro_id	nombre_usuario	cod_agencia	desc_agencia	localidad	departamento								
+# Hoja 2:
+nombre:PENSION INVALIDEZ>nro_doc	apel_1	apel_2	nomb_1	nomb_2	fecha_nac	fecha_fallec	nro_solicitud	fecha_solicitud	fecha_estado	usuario_id	cod_agencia	usuaro_id	nombre_usuario	cod_agencia	desc_agencia	localidad	departamento
+
+Recuerda lo que te habia comentado sobre el nombre de la columna 1 de la Hoja 2: nombre:PENSION INVALIDEZ>nro_doc. Calculo que es un error, el dato corresponde al de nro_doc. Pienso que los archivos vendrian con el campo: nro_doc. Pero si pudieramos hacerlo para que funcione de cualquier modo, mejor.
+.....
+
+Te voy a volver pasar los archivos, asi como se ven. Para que los modifiques. Ten cuidado en tocar lo de lo anterior que ya andaba bien. Y si pudes mandame los archivos completos, pero con mucho cuidado de no olvidarte de nada de lo que ya funcionaba.
+'''
+# src/store/uiSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+
+const initialState = {
+  isLoggedIn: false,
+  department: null,
+  sidebarCollapsed: false,
+  selectedSidebarItem: 'Pasivos',
+  selectedHeaderItem: 'InformePasivos',
+  selectedPage: 'InformePasivos',
+  filterOption: 'all', // 'all', 'info', 'safe'
+  filterOption2: 'all', // Para el segundo RING
+};
+
+const uiSlice = createSlice({
+  name: 'ui',
+  initialState,
+  reducers: {
+    toggleSidebar(state) {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+    },
+    setSelectedSidebarItem(state, action) {
+      state.selectedSidebarItem = action.payload;
+      // Resetear el item del header cada vez que cambie el sidebar
+      state.selectedHeaderItem = null;
+      // Resetear la página seleccionada al cambiar de sidebar
+      state.selectedPage = null;
+    },
+    setSelectedHeaderItem(state, action) {
+      state.selectedHeaderItem = action.payload;
+    },
+    setSelectedPage(state, action) {
+      state.selectedPage = action.payload;
+    },
+    setFilterOption(state, action) {
+      state.filterOption = action.payload;
+    },
+    setFilterOption2(state, action) {
+      state.filterOption2 = action.payload;
+    },
+    login(state, action) {
+      state.isLoggedIn = true;
+      state.department = action.payload;
+      // Opcional: Seleccionar automáticamente el sidebar y header basado en el departamento
+      // Por ejemplo, si el departamento es "Informes", seleccionar "Informes" en el sidebar
+      // Puedes personalizar esta lógica según tus necesidades
+    },
+    logout(state) {
+      state.isLoggedIn = false;
+      state.department = null;
+      state.selectedSidebarItem = null;
+      state.selectedHeaderItem = null;
+      state.selectedPage = null;
+      state.filterOption = 'all';
+      state.filterOption2 = 'all';
+    },
+  },
+});
+
+export const {
+  toggleSidebar,
+  setSelectedSidebarItem,
+  setSelectedHeaderItem,
+  setSelectedPage,
+  setFilterOption,
+  setFilterOption2,
+  login,
+  logout,
+} = uiSlice.actions;
+
+export default uiSlice.reducer;
+
+'''
+'''
+# src/store/dataSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+
+const initialState = {
+  // Primer RING
+  ringData: [],
+  apiaData: [],
+  processedData: [],
+  loadingRing: false,
+  loadingApia: false,
+  processingData: false,
+
+  // Segundo RING
+  ring2Data: [],
+  loadingRing2: false,
+  processedData2: [],
+  processingData2: false,
+
+  // Documento generado
+  generatedDocument: null,
+};
+
+const dataSlice = createSlice({
+  name: 'data',
+  initialState,
+  reducers: {
+    // Acciones para el primer RING
+    setRingData(state, action) {
+      state.ringData = action.payload;
+      state.loadingRing = false;
+    },
+    setApiaData(state, action) {
+      state.apiaData = action.payload;
+      state.loadingApia = false;
+    },
+    setProcessedData(state, action) {
+      state.processedData = action.payload;
+      state.processingData = false;
+    },
+    setLoadingRing(state, action) {
+      state.loadingRing = action.payload;
+    },
+    setLoadingApia(state, action) {
+      state.loadingApia = action.payload;
+    },
+    setProcessingData(state, action) {
+      state.processingData = action.payload;
+    },
+
+    // Acciones para el segundo RING
+    setRing2Data(state, action) {
+      state.ring2Data = action.payload;
+      state.loadingRing2 = false;
+    },
+    setLoadingRing2(state, action) {
+      state.loadingRing2 = action.payload;
+    },
+    setProcessedData2(state, action) {
+      state.processedData2 = action.payload;
+      state.processingData2 = false;
+    },
+    setProcessingData2(state, action) {
+      state.processingData2 = action.payload;
+    },
+
+    // Acciones para el documento generado
+    setGeneratedDocument(state, action) {
+      state.generatedDocument = action.payload;
+    },
+    resetGeneratedDocument(state) {
+      state.generatedDocument = null;
+    },
+  },
+});
+
+export const {
+  // Acciones para el primer RING
+  setRingData,
+  setApiaData,
+  setProcessedData,
+  setLoadingRing,
+  setLoadingApia,
+  setProcessingData,
+
+  // Acciones para el segundo RING
+  setRing2Data,
+  setLoadingRing2,
+  setProcessedData2,
+  setProcessingData2,
+
+  // Acciones para el documento generado
+  setGeneratedDocument,
+  resetGeneratedDocument,
+} = dataSlice.actions;
+
+export default dataSlice.reducer;
+
+
+'''
+'''
+
+# src/components/RightColumn.jsx
+import React from 'react';
+import FileUploader from './FileUploader';
+import FilterOptions from './FilterOptions';
+import ReporteRing from './ReporteRing';
+import FileUploaderSecondRing from './FileUploaderSecondRing';
+import FilterOptionsSecond from './FilterOptionsSecond';
+import ReporteRingSecond from './ReporteRingSecond';
+
+function RightColumn({page}) {
+  switch (page) {
+    case 'InformePasivos':
+      return (
+        <section className="container__right-column">
+          <h2 className="heading-secondary">Cargar Archivos RING y APIA</h2>
+          <FileUploader />
+          <FilterOptions />
+          <ReporteRing />
+
+          <hr />
+
+          <h2 className="heading-secondary">Cargar Segundo Archivo RING</h2>
+          <FileUploaderSecondRing />
+          <FilterOptionsSecond />
+          <ReporteRingSecond />
+        </section>
+      );
+    case 'AtencionActivos':
+      return <div>Archivos rertornados</div>;
+    case 'OficiosJudiciales':
+      return <div>Ver...</div>;
+    // ...otros casos...
+    default:
+      return <div>Selecciona una opción.</div>;
+  }
+}
+
+export default RightColumn;
+
+'''
+'''
+
+import React from 'react';
+import { useSelector } from 'react-redux';
+
+const ReporteRing = () => {
+  const processedData = useSelector((state) => state.data.processedData);
+  const PLAZO_JC = parseInt(import.meta.env.VITE_PLAZO_JC, 10);
+  const PLAZO_PCUC = parseInt(import.meta.env.VITE_PLAZO_PCUC, 10);
+  const PLAZO_AVISO = parseInt(import.meta.env.VITE_PLAZO_AVISO, 10);
+
+  let pendientes = 0;
+  let porVencer = 0;
+  let alDia = 0;
+  let vencidos = 0;
+
+  const getTipoTramite = (codTipo) => {
+    if ([1, 25, 26].includes(codTipo)) {
+      return 'Jubilación común';
+    }
+    if (codTipo === 9) {
+      return 'Incapacidad';
+    }
+    return 'Otro';
+  };
+
+  processedData.forEach((item) => {
+    const codTipo = parseInt(item.cod_tipo_solicitud, 10);
+    const atraso = item.dias_atraso || 0;
+
+    // Calcular clasificaciones
+    if (codTipo === 9) {
+      if (atraso >= PLAZO_PCUC) {
+        vencidos++;
+      } else if (atraso >= PLAZO_PCUC - PLAZO_AVISO) {
+        porVencer++;
+        alDia++;
+      } else {
+        alDia++;
+      }
+    } else if ([1, 25, 26].includes(codTipo)) {
+      if (atraso >= PLAZO_JC) {
+        vencidos++;
+      } else if (atraso >= PLAZO_JC - PLAZO_AVISO) {
+        porVencer++;
+        alDia++;
+      } else {
+        alDia++;
+      }
+    }
+
+    pendientes++;
+  });
+
+  return (
+    <div className="reporte-ring">
+      
+      <ul>
+        <li>
+          <strong>{pendientes}</strong> trámites pendientes
+        </li>
+        <li>
+          <strong>{porVencer}</strong> trámites por vencer en {PLAZO_AVISO} días
+        </li>
+        <li>
+          <strong>{alDia}</strong> trámites al día
+        </li>
+        <li>
+          <strong>{vencidos}</strong> trámites vencidos
+        </li>
+      </ul>
+    
+      
+    </div>
+  );
+};
+
+export default ReporteRing;
+
+
+'''
+'''
+
+# src/components/FileUploader.jsx
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import * as XLSX from 'xlsx';
+import {
+  setRingData,
+  setApiaData,
+  setLoadingRing,
+  setLoadingApia,
+} from '../store/dataSlice';
+
+const FileUploader = () => {
+  const dispatch = useDispatch();
+  const loadingRing = useSelector((state) => state.data.loadingRing);
+  const loadingApia = useSelector((state) => state.data.loadingApia);
+
+  const handleRingUpload = (file) => {
+    if (!file) return;
+    dispatch(setLoadingRing(true)); // Inicia la carga
+    readExcel(file, (data) => dispatch(setRingData(data)));
+  };
+
+  const handleApiaUpload = (file) => {
+    if (!file) return;
+    dispatch(setLoadingApia(true)); // Inicia la carga
+    readExcel(file, (data) => dispatch(setApiaData(data)), 1);
+  };
+
+  const readExcel = (file, callback, sheetIndex = 0) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const binaryStr = event.target.result;
+      const workbook = XLSX.read(binaryStr, { type: 'binary' });
+      const sheetName = workbook.SheetNames[sheetIndex];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      callback(jsonData);
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const triggerFileInput = (id) => {
+    document.getElementById(id).click();
+  };
+
+  return (
+    <div className="upload-buttons">
+      <div className="upload-button">
+        <label htmlFor="ring-upload"></label>
+        <input
+          type="file"
+          id="ring-upload"
+          accept=".xlsx, .xls"
+          onChange={(e) => handleRingUpload(e.target.files[0])}
+        />
+        <button onClick={() => triggerFileInput('ring-upload')}>
+          {loadingRing ? 'Cargando...' : 'Subir Archivo RING'}
+        </button>
+      </div>
+      <div className="upload-button">
+        <label htmlFor="apia-upload"></label>
+        <input
+          type="file"
+          id="apia-upload"
+          accept=".xlsx, .xls"
+          onChange={(e) => handleApiaUpload(e.target.files[0])}
+        />
+        <button onClick={() => triggerFileInput('apia-upload')}>
+          {loadingApia ? 'Cargando...' : 'Subir Archivo APIA'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default FileUploader;
+
+
+'''
+'''
+
+// src/components/FileUploaderSecondRing.jsx
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import * as XLSX from 'xlsx';
+import { setRing2Data, setLoadingRing2 } from '../store/dataSlice';
+
+const FileUploaderSecondRing = () => {
+  const dispatch = useDispatch();
+  const loadingRing2 = useSelector((state) => state.data.loadingRing2);
+  const [sheetIndex, setSheetIndex] = useState(0); // 0 = PV, 1 = PCUC
+  
+  const handleRing2Upload = (file) => {
+    if (!file) return;
+    dispatch(setLoadingRing2(true));
+    readExcel(file, (data) => dispatch(setRing2Data(data)), sheetIndex);
+  };
+
+  const readExcel = (file, callback, sheetIndex = 0) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const binaryStr = event.target.result;
+            const workbook = XLSX.read(binaryStr, { type: 'binary' });
+            const sheetName = workbook.SheetNames[sheetIndex];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            callback(jsonData);
+          } catch (error) {
+            console.error('Error al leer el archivo Excel:', error);
+            dispatch(setLoadingRing2(false));
+            alert('Ocurrió un error al procesar el archivo. Asegúrate de que sea un archivo Excel válido.');
+          }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const triggerFileInput = () => {
+    document.getElementById('ring2-upload').click();
+  };
+
+  return (
+    <div className="upload-buttons">
+      <div className="upload-button mb-3">
+        <label htmlFor="sheet-select" className="form-label">Seleccionar hoja:</label>
+        <select
+          id="sheet-select"
+          value={sheetIndex}
+          onChange={(e) => setSheetIndex(parseInt(e.target.value, 10))}
+          className="form-select"
+        >
+          <option value={0}>Hoja PV (Plazo VITE_PLAZO_PV)</option>
+          <option value={1}>Hoja PCUC (Plazo VITE_PLAZO_PCUC)</option>
+        </select>
+      </div>
+
+      <div className="upload-button">
+        <input
+          type="file"
+          id="ring2-upload"
+          accept=".xlsx, .xls"
+          onChange={(e) => handleRing2Upload(e.target.files[0])}
+          style={{ display: 'none' }}
+        />
+        <button
+          onClick={triggerFileInput}
+          className="btn btn-secondary"
+          disabled={loadingRing2}
+        >
+          {loadingRing2 ? 'Cargando...' : 'Subir Segundo Archivo RING'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default FileUploaderSecondRing;
+
+
+'''
+
+'''
+
+// src/components/FilterOptions.jsx
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setFilterOption } from '../store/uiSlice';
+
+const FilterOptions = () => {
+  const dispatch = useDispatch();
+  const filterOption = useSelector((state) => state.ui.filterOption);
+  const PLAZO_AVISO = import.meta.env.VITE_PLAZO_AVISO;
+
+  const handleChange = (e) => {
+    dispatch(setFilterOption(e.target.value));
+  };
+
+  return (
+    <div className="filter-options">
+      <div className="filter-option">
+        <input
+          type="radio"
+          id="all"
+          name="filterOption"
+          value="all"
+          checked={filterOption === 'all'}
+          onChange={handleChange}
+        />
+        <label htmlFor="all">
+          <span>Todos los registros</span>
+        </label>
+      </div>
+
+      <div className="filter-option">
+        <input
+          type="radio"
+          id="info"
+          name="filterOption"
+          value="info"
+          checked={filterOption === 'info'}
+          onChange={handleChange}
+        />
+        <label htmlFor="info">
+          <span>Faltan menos de {PLAZO_AVISO} días</span>
+        </label>
+      </div>
+
+      <div className="filter-option">
+        <input
+          type="radio"
+          id="safe"
+          name="filterOption"
+          value="safe"
+          checked={filterOption === 'safe'}
+          onChange={handleChange}
+        />
+        <label htmlFor="safe">
+          <span>Están al día</span>
+        </label>
+      </div>
+    </div>
+  );
+};
+
+export default FilterOptions;
+
+
+'''
+
+Puedes ayudarme con eso?

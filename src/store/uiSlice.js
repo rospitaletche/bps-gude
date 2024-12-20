@@ -20,9 +20,7 @@ const uiSlice = createSlice({
     },
     setSelectedSidebarItem(state, action) {
       state.selectedSidebarItem = action.payload;
-      // Resetear el item del header cada vez que cambie el sidebar
       state.selectedHeaderItem = null;
-      // Resetear la página seleccionada al cambiar de sidebar
       state.selectedPage = null;
     },
     setSelectedHeaderItem(state, action) {
@@ -37,9 +35,6 @@ const uiSlice = createSlice({
     login(state, action) {
       state.isLoggedIn = true;
       state.department = action.payload;
-      // Opcional: Seleccionar automáticamente el sidebar y header basado en el departamento
-      // Por ejemplo, si el departamento es "Informes", seleccionar "Informes" en el sidebar
-      // Puedes personalizar esta lógica según tus necesidades
     },
     logout(state) {
       state.isLoggedIn = false;
@@ -47,6 +42,7 @@ const uiSlice = createSlice({
       state.selectedSidebarItem = null;
       state.selectedHeaderItem = null;
       state.selectedPage = null;
+      state.filterOption = 'all';
     },
   },
 });

@@ -402,13 +402,15 @@ body {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  bottom: 10px;
+  margin-bottom: 15px;
 }
 
 /* Cada botón de carga */
 .upload-button {
   display: flex;
   align-items: center;
-  gap: 10px;
+  /*gap: 10px;*/
 }
 
 /* Ocultar el input pero mantener su funcionalidad */
@@ -756,11 +758,16 @@ button[type="submit"]:active {
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  min-width: 200px;
 }
 
 .btn-primary {
   background-color: var(--color-secundario);
   color: #fff;
+}
+
+.btn-primary--complementary {
+  background-color: var(--color-acentuado) !important;
 }
 
 .btn-primary:hover {
