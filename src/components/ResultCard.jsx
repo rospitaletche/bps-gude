@@ -16,10 +16,10 @@ const ResultCard = ({ item }) => {
           <span className="label">Fecha de solicitud:</span>{' '}
           {item.fecha_solicitud} ({item.dias_atraso} días de atraso)
         </div>
-        {item.desc_tipo_solic && (
+        {item.tipo_solicitud && (
           <div className="gap-item">
             <span className="label">Tipo de solicitud:</span>{' '}
-            {item.desc_tipo_solic}
+            {item.tipo_solicitud}
           </div>
         )}
       </div>

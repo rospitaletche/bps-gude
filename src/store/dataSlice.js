@@ -70,6 +70,24 @@ const dataSlice = createSlice({
     resetGeneratedDocument(state) {
       state.generatedDocument = null;
     },
+
+    // Nuevas Acciones de Reset
+    resetProcessedData(state) {
+      state.processedData = [];
+    },
+    resetRingPVData(state) {
+      state.ringPVData = [];
+    },
+    resetRingPIData(state) {
+      state.ringPIData = [];
+    },
+    resetAllProcessedData(state) {
+      state.processedData = [];
+      state.ringPVData = [];
+      state.ringPIData = [];
+      state.ringData = [];     // Añadido para resetear ringData
+      state.apiaData = [];     // Añadido para resetear apiaData
+    },
   },
 });
 
@@ -88,6 +106,11 @@ export const {
 
   setGeneratedDocument,
   resetGeneratedDocument,
+
+  resetProcessedData,
+  resetRingPVData,
+  resetRingPIData,
+  resetAllProcessedData,
 } = dataSlice.actions;
 
 export default dataSlice.reducer;

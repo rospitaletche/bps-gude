@@ -32,13 +32,19 @@ const FileUploaderSecondRing = () => {
   const handlePVUpload = (file) => {
     if (!file) return;
     dispatch(setLoadingRingPV(true));
-    readExcel(file, (data) => dispatch(setRingPVData(data)), 0); // Hoja 0 = PV
+    readExcel(file, (data) => {
+      dispatch(setRingPVData(data));
+      document.getElementById('pv-upload').value = null; // Limpiar input
+    }, 0); // Hoja 0 = PV
   };
 
   const handlePIUpload = (file) => {
     if (!file) return;
     dispatch(setLoadingRingPI(true));
-    readExcel(file, (data) => dispatch(setRingPIData(data)), 1); // Hoja 1 = PCUC
+    readExcel(file, (data) => {
+      dispatch(setRingPIData(data));
+      document.getElementById('pi-upload').value = null; // Limpiar input
+    }, 1); // Hoja 1 = PI
   };
 
   const triggerFileInput = (id) => {
@@ -65,24 +71,20 @@ const FileUploaderSecondRing = () => {
       </div>
 
       <div className="upload-button">
-        <div className="upload-button">
-          <input
-            type="file"
-            id="pi-upload"
-            accept=".xlsx, .xls"
-            onChange={(e) => handlePIUpload(e.target.files[0])}
-            style={{ display: 'none' }}
-          />
-        </div>
-        <div className="upload-button">
-          <button
-            onClick={() => triggerFileInput('pi-upload')}
-            className="btn btn-secondary"
-            disabled={loadingRingPI}
-          >
-            {loadingRingPI ? 'Cargando...' : 'Pensión Invalidez'}
-          </button>
-        </div>
+        <input
+          type="file"
+          id="pi-upload"
+          accept=".xlsx, .xls"
+          onChange={(e) => handlePIUpload(e.target.files[0])}
+          style={{ display: 'none' }}
+        />
+        <button
+          onClick={() => triggerFileInput('pi-upload')}
+          className="btn btn-secondary"
+          disabled={loadingRingPI}
+        >
+          {loadingRingPI ? 'Cargando...' : 'Pensión Invalidez'}
+        </button>
       </div>
     </div>
   );

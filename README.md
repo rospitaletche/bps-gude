@@ -3393,3 +3393,1052 @@ export default FilterOptions;
 '''
 
 Puedes ayudarme con eso?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Esta quedando muy bien el codigo. 
+Ya estan solucionados todos los temitas anteriores, por lo tanto ya no es necesario que sigas mostrandome la solucion. 
+Partamos de la base que esta todo funcionando bien. Pero quiero algunos cambios y agregados.
+1) En los cards, para los tipos PI (Pension Invalidez) y PV (Pensión Vejez) no se está imprimiendo 'Tipo de Solicitud'. Si bien la planilla no lo muestra, quisiera que apareciera: 'Pension Invalidez' o 'Pensión Vejez', dependiendo de cual sea el caso.
+Sobre esos tambien tengo una consulta. Veo que el codigo, para definirlos, dice:
+'''
+// Función para lógica PV (Pensión Vejez)
+  const codTipoLogicPV = () => {
+    // PV = codTipo = 1 (asimilar JC), plazo = PLAZO_PV
+    return { codTipo: 1, plazo: PLAZO_PV };
+  };
+
+  // Función para lógica PI (Pensión Invalidez)
+  const codTipoLogicPI = () => {
+    // PI = codTipo = 9 (Pensión Invalidez), plazo = PLAZO_PI
+    return { codTipo: 9, plazo: PLAZO_PI };
+  };
+
+'''
+Sin embargo no me queda claro porque tienen codTipo: 9 o codTipo: 1. 
+Eso no altera su comportamiento en otra parte del codigo (confundirlos con los tipos que realmente son 1 o 9). Si consideras que no, no hay razon de modificarlo. Como te dije, el codigo anda bien y prefiero no tocar para no romper nada.
+
+2) Me gustaria de un componente que sea un boton, y que al presionar RESETEE el componente de los datos procesados.
+Hoy, asi como esta, si cargo PV me muestra los cards correspondientes. Si luego cargo PI me muestra los de PV + los de PI. Y lo mismo con el otro boton. 
+Me parece genial el funcionamiento. Y no quiero que se altere. 
+Pero quiero que con ese boton, pueda cancelar (borrar) lo que se proceso anter y cargar, por ejemplo, solo los datos de un processo.
+Ej.:
+Cargo PI. Me muestra los cards de PI.
+Hago Reset: No me muestra mas cards 
+Cargo PV. Me muesta solo los cards de PV
+
+Te paso los archivos que considero que puedes necesitar, para que solo modifiquees lo necesario:
+
+'''
+# src/store/dataSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+
+const initialState = {
+  // Primer RING
+  ringData: [],
+  apiaData: [],
+  processedData: [],
+  loadingRing: false,
+  loadingApia: false,
+  processingData: false,
+
+  // Segundo RING: Pensión Vejez (PV) y Pensión Invalidez (PI)
+  ringPVData: [],    // Hoja 0
+  ringPIData: [],    // Hoja 1
+  loadingRingPV: false,
+  loadingRingPI: false,
+
+  // Documento generado
+  generatedDocument: null,
+};
+
+const dataSlice = createSlice({
+  name: 'data',
+  initialState,
+  reducers: {
+    // Primer RING
+    setRingData(state, action) {
+      state.ringData = action.payload;
+      state.loadingRing = false;
+    },
+    setApiaData(state, action) {
+      state.apiaData = action.payload;
+      state.loadingApia = false;
+    },
+    setProcessedData(state, action) {
+      state.processedData = action.payload;
+      state.processingData = false;
+    },
+    setLoadingRing(state, action) {
+      state.loadingRing = action.payload;
+    },
+    setLoadingApia(state, action) {
+      state.loadingApia = action.payload;
+    },
+    setProcessingData(state, action) {
+      state.processingData = action.payload;
+    },
+
+    // Segundo RING
+    setRingPVData(state, action) {
+      state.ringPVData = action.payload;
+      state.loadingRingPV = false;
+    },
+    setRingPIData(state, action) {
+      state.ringPIData = action.payload;
+      state.loadingRingPI = false;
+    },
+    setLoadingRingPV(state, action) {
+      state.loadingRingPV = action.payload;
+    },
+    setLoadingRingPI(state, action) {
+      state.loadingRingPI = action.payload;
+    },
+
+    // Documento
+    setGeneratedDocument(state, action) {
+      state.generatedDocument = action.payload;
+    },
+    resetGeneratedDocument(state) {
+      state.generatedDocument = null;
+    },
+  },
+});
+
+export const {
+  setRingData,
+  setApiaData,
+  setProcessedData,
+  setLoadingRing,
+  setLoadingApia,
+  setProcessingData,
+
+  setRingPVData,
+  setRingPIData,
+  setLoadingRingPV,
+  setLoadingRingPI,
+
+  setGeneratedDocument,
+  resetGeneratedDocument,
+} = dataSlice.actions;
+
+export default dataSlice.reducer;
+
+'''
+'''
+# src/components/Results.jsx
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { setProcessedData, setProcessingData } from '../store/dataSlice';
+import ResultCard from './ResultCard';
+import LoadingSpinner from './LoadingSpinner';
+import { parseDate } from '../utils/dateUtils';
+import { formatDocumento } from '../utils/formatUtils';
+
+const Results = () => {
+  const dispatch = useDispatch();
+  const ringData = useSelector((state) => state.data.ringData);
+  const ringPVData = useSelector((state) => state.data.ringPVData);
+  const ringPIData = useSelector((state) => state.data.ringPIData);
+  const apiaData = useSelector((state) => state.data.apiaData);
+  const processedData = useSelector((state) => state.data.processedData);
+  const processingData = useSelector((state) => state.data.processingData);
+  const filterOption = useSelector((state) => state.ui.filterOption);
+  const department = useSelector((state) => state.ui.department);
+
+  const PLAZO_JC = parseInt(import.meta.env.VITE_PLAZO_JC, 10);
+  const PLAZO_PCUC = parseInt(import.meta.env.VITE_PLAZO_PCUC, 10);
+  const PLAZO_AVISO = parseInt(import.meta.env.VITE_PLAZO_AVISO, 10);
+  const PLAZO_PV = parseInt(import.meta.env.VITE_PLAZO_PV, 10); // Plazo para Pensión Vejez
+  const PLAZO_PI = parseInt(import.meta.env.VITE_PLAZO_PI, 10); // Plazo para Pensión Invalidez
+
+  const fechaActual = new Date();
+
+  const diasAtraso = (fechaSolicitud) => {
+    const fecha = parseDate(fechaSolicitud);
+    if (!fecha || isNaN(fecha.getTime())) return 0;
+    const diffTime = fechaActual - fecha;
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const findNroDoc = (item) => {
+    // Busca una key que contenga 'nro_doc' (ignorando mayúsculas y caracteres especiales)
+    for (const key of Object.keys(item)) {
+      if (key.toLowerCase().includes('nro_doc')) {
+        return item[key];
+      }
+    }
+    return null;
+  };
+
+  const processRINGData = (data, codTipoLogic) => {
+    // codTipoLogic es una función que determina codTipo según el set de datos
+    const filtered = department === 'MONTEVIDEO'
+      ? data
+      : data.filter((item) =>
+          item['departamento'] &&
+          item['departamento'].toUpperCase() === department.toUpperCase()
+        );
+
+    return filtered.map((ringItem) => {
+      let codTipo = 1; // default jubilación común
+      let plazo = PLAZO_JC;
+
+      if (codTipoLogic) {
+        const result = codTipoLogic(ringItem);
+        codTipo = result.codTipo;
+        plazo = result.plazo;
+      } else {
+        // Lógica original del primer RING
+        const cTipo = parseInt(ringItem['cod_tipo_solicitud'], 10);
+        if (cTipo === 9) {
+          codTipo = 9;
+          plazo = PLAZO_PCUC;
+        } else if ([1, 25, 26, 27].includes(cTipo)) {
+          codTipo = cTipo; // mantiene codTipo 1,25,26 asimilable a JC
+          plazo = PLAZO_JC;
+        } else {
+          codTipo = cTipo || 0;
+          plazo = PLAZO_JC;
+        }
+      }
+
+      const nroDoc = codTipoLogic ? findNroDoc(ringItem) : ringItem['nro_doc'];
+      const asuntoDoc = nroDoc?.toString() || '';
+
+      const apiaMatches = apiaData.filter((apiaItem) => {
+        const asunto = apiaItem['Asunto'] || '';
+        const docInAsunto = asunto.split(' ')[0];
+        return docInAsunto === asuntoDoc;
+      });
+
+      const fechaSolicitud = ringItem['fecha_solicitud'];
+      const parsedFechaSolicitud = fechaSolicitud
+        ? parseDate(fechaSolicitud)
+        : null;
+
+      const atraso = parsedFechaSolicitud
+        ? diasAtraso(parsedFechaSolicitud)
+        : 0;
+
+      let styleOption = '';
+      if (codTipo === 9) { // Pensión Invalidez
+        if (atraso >= plazo) styleOption = 'danger';
+        else if (atraso >= plazo - PLAZO_AVISO) styleOption = 'info';
+      } else if ([1, 25, 26, 27].includes(codTipo) || codTipo === 1) { // JC o Pensión Vejez
+        if (atraso >= plazo) styleOption = 'danger';
+        else if (atraso >= plazo - PLAZO_AVISO) styleOption = 'info';
+      }
+
+      return {
+        nro_doc: formatDocumento(nroDoc),
+        nombre: `${ringItem['nomb_1'] || ''} ${ringItem['nomb_2'] || ''} ${ringItem['apel_1'] || ''} ${ringItem['apel_2'] || ''}`.trim(),
+        fecha_solicitud: parsedFechaSolicitud
+          ? parsedFechaSolicitud.toLocaleDateString('es-ES')
+          : 'Fecha no disponible',
+        dias_atraso: atraso,
+        apiaMatches: apiaMatches.map((apiaItem) => ({
+          nro_expediente: apiaItem['Nro. expediente'],
+          usuario_actual: apiaItem['Usuario actual'],
+          cant_dias: apiaItem['Cant. días'],
+        })),
+        desc_tipo_solic: ringItem['desc_tipo_solic'] || '',
+        cod_tipo_solicitud: codTipo.toString(),
+        styleOption,
+      };
+    });
+  };
+
+  // Función para lógica PV (Pensión Vejez)
+  const codTipoLogicPV = () => {
+    // PV = codTipo = 1 (asimilar JC), plazo = PLAZO_PV
+    return { codTipo: 1, plazo: PLAZO_PV };
+  };
+
+  // Función para lógica PI (Pensión Invalidez)
+  const codTipoLogicPI = () => {
+    // PI = codTipo = 9 (Pensión Invalidez), plazo = PLAZO_PI
+    return { codTipo: 9, plazo: PLAZO_PI };
+  };
+
+  useEffect(() => {
+    // Siempre que cambien los datos, procesamos todo
+    if (ringData.length > 0 || ringPVData.length > 0 || ringPIData.length > 0 || apiaData.length > 0) {
+      dispatch(setProcessingData(true));
+
+      // Procesa ringData con lógica original (cod_tipo_solicitud)
+      const result1 = ringData.length > 0 ? processRINGData(ringData, null) : [];
+
+      // Procesa ringPVData (Pensión Vejez) con lógica PV
+      const resultPV = ringPVData.length > 0 ? processRINGData(ringPVData, codTipoLogicPV) : [];
+
+      // Procesa ringPIData (Pensión Invalidez) con lógica PI
+      const resultPI = ringPIData.length > 0 ? processRINGData(ringPIData, codTipoLogicPI) : [];
+
+      const combined = [...result1, ...resultPV, ...resultPI];
+      combined.sort((a, b) => a.dias_atraso - b.dias_atraso);
+
+      setTimeout(() => {
+        dispatch(setProcessedData(combined));
+        dispatch(setProcessingData(false));
+      }, 500);
+    }
+  }, [ringData, ringPVData, ringPIData, apiaData, department, dispatch]);
+
+  if (processingData) {
+    return (
+      <div className="result-container">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  let filteredData = processedData;
+  if (filterOption === 'info') {
+    filteredData = processedData.filter((item) => item.styleOption === 'info');
+  } else if (filterOption === 'safe') {
+    filteredData = processedData.filter((item) => item.styleOption !== 'danger');
+  }
+
+  if (filteredData.length > 0) {
+    return (
+      <div className="result-container">
+        {filteredData.map((item, index) => (
+          <ResultCard key={index} item={item} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="result-container">
+      <p>No hay datos para mostrar.</p>
+    </div>
+  );
+};
+
+export default Results;
+
+'''
+'''
+# src/components/RightColumn.jsx
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import FileUploader from './FileUploader';
+import FilterOptions from './FilterOptions';
+import ReporteRing from './ReporteRing';
+import FileUploaderSecondRing from './FileUploaderSecondRing';
+import { resetGeneratedDocument } from '../store/dataSlice';
+
+function RightColumn({ page }) {
+  const generatedDocument = useSelector((state) => state.data.generatedDocument);
+  const dispatch = useDispatch();
+
+  const handleDownload = () => {
+    if (generatedDocument) {
+      const a = document.createElement('a');
+      a.href = generatedDocument;
+      a.download = 'oficio_completado.docx';
+      a.click();
+      URL.revokeObjectURL(generatedDocument);
+      dispatch(resetGeneratedDocument());
+    }
+  };
+
+  switch (page) {
+    case 'InformePasivos':
+      return (
+        <section className="container__right-column">
+          <h2 className="heading-secondary">Cargar Archivos</h2>
+          <FileUploaderSecondRing />
+          
+          <FileUploader />
+          <FilterOptions />
+          <hr />
+          <ReporteRing />
+
+          <hr />
+          {generatedDocument && (
+            <button className="btn btn-success mt-3" onClick={handleDownload}>
+              Descargar Documento Generado
+            </button>
+          )}
+        </section>
+      );
+    case 'AtencionActivos':
+      return <div>Archivos retornados</div>;
+    case 'OficiosJudiciales':
+      return <div>Ver...</div>;
+    default:
+      return <div>Selecciona una opción.</div>;
+  }
+}
+
+export default RightColumn;
+
+'''
+'''
+'''
+
+# OJO!!!!!!!!!!!!!!!!!!!!!!!
+Borre 
+{item.desc_tipo_solic && (
+          <div className="gap-item">
+            <span className="label">Tipo de solicitud:</span>{' '}
+            {item.desc_tipo_solic}
+          </div>
+        )}
+
+      Para colocar 
+
+
+<strong>Tipo de Solicitud:</strong> {item.tipo_solicitud}<br />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+La parte 1 funciono bien. Muestra bien el tipo de solicitud. Gracias
+En cambio la parte 2. El reseteo que te pedi. No lo hace bien.
+Cuando reseteo PI o PV, por ejemplo. Luego no me permite volver a subir los arhivos. O sea:
+. Subo PI
+. Muestra resultados de PI
+. Subo PI
+. No muestra nada
+Por otro lado, el otro boton, 'Jubilaciones', no resetea.
+Por las dudas te voy a pasar ademas el codigo de:
+FileUploader (donde se encuentra el boton [Jubilaciones])
+FileUploaderSecondring (donde se encuentran los botones de PI y PV)
+
+'''
+# src/components/FileUploader.jsx
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import * as XLSX from 'xlsx';
+import {
+  setRingData,
+  setApiaData,
+  setLoadingRing,
+  setLoadingApia,
+} from '../store/dataSlice';
+
+const FileUploader = () => {
+  const dispatch = useDispatch();
+  const loadingRing = useSelector((state) => state.data.loadingRing);
+  const loadingApia = useSelector((state) => state.data.loadingApia);
+
+  const handleRingUpload = (file) => {
+    if (!file) return;
+    dispatch(setLoadingRing(true)); // Inicia la carga
+    readExcel(file, (data) => dispatch(setRingData(data)));
+  };
+
+  const handleApiaUpload = (file) => {
+    if (!file) return;
+    dispatch(setLoadingApia(true)); // Inicia la carga
+    readExcel(file, (data) => dispatch(setApiaData(data)), 1);
+  };
+
+  const readExcel = (file, callback, sheetIndex = 0) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const binaryStr = event.target.result;
+      const workbook = XLSX.read(binaryStr, { type: 'binary' });
+      const sheetName = workbook.SheetNames[sheetIndex];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      callback(jsonData);
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const triggerFileInput = (id) => {
+    document.getElementById(id).click();
+  };
+
+  return (
+    <div className="upload-buttons">
+      <div className="upload-button">
+        <label htmlFor="ring-upload"></label>
+        <input
+          type="file"
+          id="ring-upload"
+          accept=".xlsx, .xls"
+          onChange={(e) => handleRingUpload(e.target.files[0])}
+        />
+        <button 
+          className="btn btn-secondary"
+          onClick={() => triggerFileInput('ring-upload')}>
+          {loadingRing ? 'Cargando...' : 'Jubilaciones'}
+        </button>
+      </div>
+      <hr />
+      <div className="upload-button">
+        <label htmlFor="apia-upload"></label>
+        <input
+          type="file"
+          id="apia-upload"
+          accept=".xlsx, .xls"
+          onChange={(e) => handleApiaUpload(e.target.files[0])}
+        />
+        <button 
+          className="btn btn-secondary btn-primary--complementary"
+          onClick={() => triggerFileInput('apia-upload')}
+        >
+          {loadingApia ? 'Cargando...' : 'Subir archivo APIA'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default FileUploader;
+
+'''
+'''
+# src/components/FileUploaderSecondRing.jsx
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import * as XLSX from 'xlsx';
+import { setRingPVData, setRingPIData, setLoadingRingPV, setLoadingRingPI } from '../store/dataSlice';
+
+const FileUploaderSecondRing = () => {
+  const dispatch = useDispatch();
+  const loadingRingPV = useSelector((state) => state.data.loadingRingPV);
+  const loadingRingPI = useSelector((state) => state.data.loadingRingPI);
+
+  const readExcel = (file, callback, sheetIndex = 0) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const binaryStr = event.target.result;
+        const workbook = XLSX.read(binaryStr, { type: 'binary' });
+        const sheetName = workbook.SheetNames[sheetIndex];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        callback(jsonData);
+      } catch (error) {
+        console.error('Error al leer el archivo Excel:', error);
+        alert('Ocurrió un error al procesar el archivo. Asegúrate de que sea un archivo Excel válido.');
+        if (sheetIndex === 0) dispatch(setLoadingRingPV(false));
+        if (sheetIndex === 1) dispatch(setLoadingRingPI(false));
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handlePVUpload = (file) => {
+    if (!file) return;
+    dispatch(setLoadingRingPV(true));
+    readExcel(file, (data) => dispatch(setRingPVData(data)), 0); // Hoja 0 = PV
+  };
+
+  const handlePIUpload = (file) => {
+    if (!file) return;
+    dispatch(setLoadingRingPI(true));
+    readExcel(file, (data) => dispatch(setRingPIData(data)), 1); // Hoja 1 = PCUC
+  };
+
+  const triggerFileInput = (id) => {
+    document.getElementById(id).click();
+  };
+
+  return (
+    <div className="upload-buttons">
+      <div className="upload-button">
+        <input
+          type="file"
+          id="pv-upload"
+          accept=".xlsx, .xls"
+          onChange={(e) => handlePVUpload(e.target.files[0])}
+          style={{ display: 'none' }}
+        />
+        <button
+          onClick={() => triggerFileInput('pv-upload')}
+          className="btn btn-secondary"
+          disabled={loadingRingPV}
+        >
+          {loadingRingPV ? 'Cargando...' : 'Pensión Vejez'}
+        </button>
+      </div>
+
+      <div className="upload-button">
+        <div className="upload-button">
+          <input
+            type="file"
+            id="pi-upload"
+            accept=".xlsx, .xls"
+            onChange={(e) => handlePIUpload(e.target.files[0])}
+            style={{ display: 'none' }}
+          />
+        </div>
+        <div className="upload-button">
+          <button
+            onClick={() => triggerFileInput('pi-upload')}
+            className="btn btn-secondary"
+            disabled={loadingRingPI}
+          >
+            {loadingRingPI ? 'Cargando...' : 'Pensión Invalidez'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FileUploaderSecondRing;
+
+'''
+
+Tambien te paso como tengo el restante de los archivos que puedas necesitar:
+
+'''
+'''
+# src/components/Results.jsx
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { setProcessedData, setProcessingData } from '../store/dataSlice';
+import ResultCard from './ResultCard';
+import LoadingSpinner from './LoadingSpinner';
+import { parseDate } from '../utils/dateUtils';
+import { formatDocumento } from '../utils/formatUtils';
+
+const Results = () => {
+  const dispatch = useDispatch();
+  const ringData = useSelector((state) => state.data.ringData);
+  const ringPVData = useSelector((state) => state.data.ringPVData);
+  const ringPIData = useSelector((state) => state.data.ringPIData);
+  const apiaData = useSelector((state) => state.data.apiaData);
+  const processedData = useSelector((state) => state.data.processedData);
+  const processingData = useSelector((state) => state.data.processingData);
+  const filterOption = useSelector((state) => state.ui.filterOption);
+  const department = useSelector((state) => state.ui.department);
+
+  const PLAZO_JC = parseInt(import.meta.env.VITE_PLAZO_JC, 10);
+  const PLAZO_PCUC = parseInt(import.meta.env.VITE_PLAZO_PCUC, 10);
+  const PLAZO_AVISO = parseInt(import.meta.env.VITE_PLAZO_AVISO, 10);
+  const PLAZO_PV = parseInt(import.meta.env.VITE_PLAZO_PV, 10); // Plazo para Pensión Vejez
+  const PLAZO_PI = parseInt(import.meta.env.VITE_PLAZO_PI, 10); // Plazo para Pensión Invalidez
+
+  const fechaActual = new Date();
+
+  const diasAtraso = (fechaSolicitud) => {
+    const fecha = parseDate(fechaSolicitud);
+    if (!fecha || isNaN(fecha.getTime())) return 0;
+    const diffTime = fechaActual - fecha;
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const findNroDoc = (item) => {
+    // Busca una key que contenga 'nro_doc' (ignorando mayúsculas y caracteres especiales)
+    for (const key of Object.keys(item)) {
+      if (key.toLowerCase().includes('nro_doc')) {
+        return item[key];
+      }
+    }
+    return null;
+  };
+
+  const processRINGData = (data, codTipoLogic) => {
+    // codTipoLogic es una función que determina codTipo según el set de datos
+    const filtered = department === 'MONTEVIDEO'
+      ? data
+      : data.filter((item) =>
+          item['departamento'] &&
+          item['departamento'].toUpperCase() === department.toUpperCase()
+        );
+
+    return filtered.map((ringItem) => {
+      let codTipo = 1; // default jubilación común
+      let plazo = PLAZO_JC;
+      let tipoSolicitud = 'Jubilación Común'; // Default
+
+      if (codTipoLogic) {
+        const result = codTipoLogic(ringItem);
+        codTipo = result.codTipo;
+        plazo = result.plazo;
+        tipoSolicitud = result.tipoSolicitud;
+      } else {
+        // Lógica original del primer RING
+        const cTipo = parseInt(ringItem['cod_tipo_solicitud'], 10);
+        if (cTipo === 9) {
+          codTipo = 9;
+          plazo = PLAZO_PCUC;
+          tipoSolicitud = 'Incapacidad';
+        } else if ([1, 25, 26].includes(cTipo)) {
+          codTipo = cTipo; // mantiene codTipo 1,25,26 asimilable a JC
+          plazo = PLAZO_JC;
+          tipoSolicitud = 'Jubilación Común';
+        } else {
+          codTipo = cTipo || 0;
+          plazo = PLAZO_JC;
+          tipoSolicitud = 'Otro';
+        }
+      }
+
+      const nroDoc = codTipoLogic ? findNroDoc(ringItem) : ringItem['nro_doc'];
+      const asuntoDoc = nroDoc?.toString() || '';
+
+      const apiaMatches = apiaData.filter((apiaItem) => {
+        const asunto = apiaItem['Asunto'] || '';
+        const docInAsunto = asunto.split(' ')[0];
+        return docInAsunto === asuntoDoc;
+      });
+
+      const fechaSolicitud = ringItem['fecha_solicitud'];
+      const parsedFechaSolicitud = fechaSolicitud
+        ? parseDate(fechaSolicitud)
+        : null;
+
+      const atraso = parsedFechaSolicitud
+        ? diasAtraso(parsedFechaSolicitud)
+        : 0;
+
+      let styleOption = '';
+      if (codTipo === 9) { // Pensión Invalidez
+        if (atraso >= plazo) styleOption = 'danger';
+        else if (atraso >= plazo - PLAZO_AVISO) styleOption = 'info';
+      } else if ([1, 25, 26].includes(codTipo) || codTipo === 1) { // JC o Pensión Vejez
+        if (atraso >= plazo) styleOption = 'danger';
+        else if (atraso >= plazo - PLAZO_AVISO) styleOption = 'info';
+      }
+
+      return {
+        nro_doc: formatDocumento(nroDoc),
+        nombre: `${ringItem['nomb_1'] || ''} ${ringItem['nomb_2'] || ''} ${ringItem['apel_1'] || ''} ${ringItem['apel_2'] || ''}`.trim(),
+        fecha_solicitud: parsedFechaSolicitud
+          ? parsedFechaSolicitud.toLocaleDateString('es-ES')
+          : 'Fecha no disponible',
+        dias_atraso: atraso,
+        apiaMatches: apiaMatches.map((apiaItem) => ({
+          nro_expediente: apiaItem['Nro. expediente'],
+          usuario_actual: apiaItem['Usuario actual'],
+          cant_dias: apiaItem['Cant. días'],
+        })),
+        desc_tipo_solic: ringItem['desc_tipo_solic'] || '',
+        cod_tipo_solicitud: codTipo.toString(),
+        styleOption,
+        tipo_solicitud: tipoSolicitud, // Nuevo campo
+      };
+    });
+  };
+
+  // Función para lógica PV (Pensión Vejez)
+  const codTipoLogicPV = () => {
+    // PV = codTipo = 1 (asimilar JC), plazo = PLAZO_PV
+    return { codTipo: 1, plazo: PLAZO_PV, tipoSolicitud: 'Pensión Vejez' };
+  };
+
+  // Función para lógica PI (Pensión Invalidez)
+  const codTipoLogicPI = () => {
+    // PI = codTipo = 9 (Pensión Invalidez), plazo = PLAZO_PI
+    return { codTipo: 9, plazo: PLAZO_PI, tipoSolicitud: 'Pensión Invalidez' };
+  };
+
+  useEffect(() => {
+    // Siempre que cambien los datos, procesamos todo
+    if (ringData.length > 0 || ringPVData.length > 0 || ringPIData.length > 0 || apiaData.length > 0) {
+      dispatch(setProcessingData(true));
+
+      // Procesa ringData con lógica original (cod_tipo_solicitud)
+      const result1 = ringData.length > 0 ? processRINGData(ringData, null) : [];
+
+      // Procesa ringPVData (Pensión Vejez) con lógica PV
+      const resultPV = ringPVData.length > 0 ? processRINGData(ringPVData, codTipoLogicPV) : [];
+
+      // Procesa ringPIData (Pensión Invalidez) con lógica PI
+      const resultPI = ringPIData.length > 0 ? processRINGData(ringPIData, codTipoLogicPI) : [];
+
+      const combined = [...result1, ...resultPV, ...resultPI];
+      combined.sort((a, b) => a.dias_atraso - b.dias_atraso);
+
+      setTimeout(() => {
+        dispatch(setProcessedData(combined));
+        dispatch(setProcessingData(false));
+      }, 500);
+    }
+  }, [ringData, ringPVData, ringPIData, apiaData, department, dispatch]);
+
+  if (processingData) {
+    return (
+      <div className="result-container">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  let filteredData = processedData;
+  if (filterOption === 'info') {
+    filteredData = processedData.filter((item) => item.styleOption === 'info');
+  } else if (filterOption === 'safe') {
+    filteredData = processedData.filter((item) => item.styleOption !== 'danger');
+  }
+
+  if (filteredData.length > 0) {
+    return (
+      <div className="result-container">
+        {filteredData.map((item, index) => (
+          <ResultCard key={index} item={item} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="result-container">
+      <p>No hay datos para mostrar.</p>
+    </div>
+  );
+};
+
+export default Results;
+
+'''
+'''
+# src/store/dataSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+
+const initialState = {
+  // Primer RING
+  ringData: [],
+  apiaData: [],
+  processedData: [],
+  loadingRing: false,
+  loadingApia: false,
+  processingData: false,
+
+  // Segundo RING: Pensión Vejez (PV) y Pensión Invalidez (PI)
+  ringPVData: [],    // Hoja 0
+  ringPIData: [],    // Hoja 1
+  loadingRingPV: false,
+  loadingRingPI: false,
+
+  // Documento generado
+  generatedDocument: null,
+};
+
+const dataSlice = createSlice({
+  name: 'data',
+  initialState,
+  reducers: {
+    // Primer RING
+    setRingData(state, action) {
+      state.ringData = action.payload;
+      state.loadingRing = false;
+    },
+    setApiaData(state, action) {
+      state.apiaData = action.payload;
+      state.loadingApia = false;
+    },
+    setProcessedData(state, action) {
+      state.processedData = action.payload;
+      state.processingData = false;
+    },
+    setLoadingRing(state, action) {
+      state.loadingRing = action.payload;
+    },
+    setLoadingApia(state, action) {
+      state.loadingApia = action.payload;
+    },
+    setProcessingData(state, action) {
+      state.processingData = action.payload;
+    },
+
+    // Segundo RING
+    setRingPVData(state, action) {
+      state.ringPVData = action.payload;
+      state.loadingRingPV = false;
+    },
+    setRingPIData(state, action) {
+      state.ringPIData = action.payload;
+      state.loadingRingPI = false;
+    },
+    setLoadingRingPV(state, action) {
+      state.loadingRingPV = action.payload;
+    },
+    setLoadingRingPI(state, action) {
+      state.loadingRingPI = action.payload;
+    },
+
+    // Documento
+    setGeneratedDocument(state, action) {
+      state.generatedDocument = action.payload;
+    },
+    resetGeneratedDocument(state) {
+      state.generatedDocument = null;
+    },
+
+    // Nuevas Acciones de Reset
+    resetProcessedData(state) {
+      state.processedData = [];
+    },
+    resetRingPVData(state) {
+      state.ringPVData = [];
+    },
+    resetRingPIData(state) {
+      state.ringPIData = [];
+    },
+    resetAllProcessedData(state) {
+      state.processedData = [];
+      state.ringPVData = [];
+      state.ringPIData = [];
+    },
+  },
+});
+
+export const {
+  setRingData,
+  setApiaData,
+  setProcessedData,
+  setLoadingRing,
+  setLoadingApia,
+  setProcessingData,
+
+  setRingPVData,
+  setRingPIData,
+  setLoadingRingPV,
+  setLoadingRingPI,
+
+  setGeneratedDocument,
+  resetGeneratedDocument,
+
+  resetProcessedData,
+  resetRingPVData,
+  resetRingPIData,
+  resetAllProcessedData,
+} = dataSlice.actions;
+
+export default dataSlice.reducer;
+
+'''
+
+'''
+# src/components/RightColumn.jsx
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import FileUploader from './FileUploader';
+import FilterOptions from './FilterOptions';
+import ReporteRing from './ReporteRing';
+import FileUploaderSecondRing from './FileUploaderSecondRing';
+import { resetAllProcessedData, resetGeneratedDocument } from '../store/dataSlice';
+
+function RightColumn({ page }) {
+  const generatedDocument = useSelector((state) => state.data.generatedDocument);
+  const dispatch = useDispatch();
+
+  const handleDownload = () => {
+    if (generatedDocument) {
+      const a = document.createElement('a');
+      a.href = generatedDocument;
+      a.download = 'oficio_completado.docx';
+      a.click();
+      URL.revokeObjectURL(generatedDocument);
+      dispatch(resetGeneratedDocument());
+    }
+  };
+
+  const handleReset = () => {
+    dispatch(resetAllProcessedData());
+  };
+
+  switch (page) {
+    case 'InformePasivos':
+      return (
+        <section className="container__right-column">
+          <h2 className="heading-secondary">Cargar Archivos</h2>
+          <FileUploaderSecondRing />
+          
+          <FileUploader />
+          <FilterOptions />
+          <hr />
+          <ReporteRing />
+
+          <hr />
+          <button className="btn btn-warning me-2" onClick={handleReset}>
+              Resetear Datos Procesados
+            </button>
+          {generatedDocument && (
+            <button className="btn btn-success mt-3" onClick={handleDownload}>
+              Descargar Documento Generado
+            </button>
+          )}
+        </section>
+      );
+    case 'AtencionActivos':
+      return <div>Archivos retornados</div>;
+    case 'OficiosJudiciales':
+      return <div>Ver...</div>;
+    default:
+      return <div>Selecciona una opción.</div>;
+  }
+}
+
+export default RightColumn;
+
+'''
+
+Tambien quisiera que RESET se vea en un componente nuevo (no colocado en RightColumn) y que se respetase el estilo de botones del resto

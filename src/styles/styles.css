@@ -766,16 +766,31 @@ button[type="submit"]:active {
   color: #fff;
 }
 
-.btn-primary--complementary {
-  background-color: var(--color-acentuado) !important;
-}
-
 .btn-primary:hover {
   background-color: #008bb5; /* Un tono más oscuro */
 }
 
 .btn-primary:active {
   background-color: #006f8f;
+}
+
+.btn-secundario {
+  background-color: #01617e !important;
+}
+
+.btn-invert {
+  color: var(--color-secundario);
+  background-color: #fff;
+  border: var(--color-secundario) solid 1px;
+}
+
+.btn-invert:hover {
+  background-color: #008bb5; /* Un tono más oscuro */
+  color: white;
+}
+
+.btn-invert:active {
+  background-color: var(--color-primario-oscuro);
 }
 
 .mt-3 {

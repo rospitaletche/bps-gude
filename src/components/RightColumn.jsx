@@ -5,6 +5,7 @@ import FileUploader from './FileUploader';
 import FilterOptions from './FilterOptions';
 import ReporteRing from './ReporteRing';
 import FileUploaderSecondRing from './FileUploaderSecondRing';
+import ResetButton from './ResetButton'; // Importar el nuevo componente
 import { resetGeneratedDocument } from '../store/dataSlice';
 
 function RightColumn({ page }) {
@@ -31,15 +32,18 @@ function RightColumn({ page }) {
           
           <FileUploader />
           <FilterOptions />
-          <hr />
+          
           <ReporteRing />
 
-          <hr />
-          {generatedDocument && (
-            <button className="btn btn-success mt-3" onClick={handleDownload}>
-              Descargar Documento Generado
-            </button>
-          )}
+          {/* Botones Adicionales */}
+          <div className="mt-3">
+            <ResetButton /> {/* Usar el nuevo componente */}
+            {generatedDocument && (
+              <button className="btn btn-success ms-2" onClick={handleDownload}>
+                Descargar Documento Generado
+              </button>
+            )}
+          </div>
         </section>
       );
     case 'AtencionActivos':

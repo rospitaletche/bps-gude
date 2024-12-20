@@ -1,3 +1,4 @@
+// src/components/ReporteRing.jsx
 import React from 'react';
 import { useSelector } from 'react-redux';
 
@@ -6,45 +7,51 @@ const ReporteRing = () => {
   const PLAZO_JC = parseInt(import.meta.env.VITE_PLAZO_JC, 10);
   const PLAZO_PCUC = parseInt(import.meta.env.VITE_PLAZO_PCUC, 10);
   const PLAZO_AVISO = parseInt(import.meta.env.VITE_PLAZO_AVISO, 10);
+  const PLAZO_PV = parseInt(import.meta.env.VITE_PLAZO_PV, 10); // Plazo para Pensión Vejez
+  const PLAZO_PI = parseInt(import.meta.env.VITE_PLAZO_PI, 10); // Plazo para Pensión Invalidez
 
   let pendientes = 0;
   let porVencer = 0;
   let alDia = 0;
   let vencidos = 0;
 
-  const getTipoTramite = (codTipo) => {
-    if ([1, 25, 26].includes(codTipo)) {
-      return 'Jubilación común';
-    }
-    if (codTipo === 9) {
-      return 'Incapacidad';
-    }
-    return 'Otro';
+  const fechaActual = new Date();
+
+  const diasAtraso = (fechaSolicitud) => {
+    const fecha = new Date(fechaSolicitud);
+    if (isNaN(fecha.getTime())) return 0;
+    const diffTime = fechaActual - fecha;
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
   };
 
   processedData.forEach((item) => {
-    const codTipo = parseInt(item.cod_tipo_solicitud, 10);
+    const tipoSolicitud = item.tipo_solicitud;
     const atraso = item.dias_atraso || 0;
+    let plazo = PLAZO_JC; // Valor por defecto
 
-    // Calcular clasificaciones
-    if (codTipo === 9) {
-      if (atraso >= PLAZO_PCUC) {
-        vencidos++;
-      } else if (atraso >= PLAZO_PCUC - PLAZO_AVISO) {
-        porVencer++;
-        alDia++;
-      } else {
-        alDia++;
-      }
-    } else if ([1, 25, 26].includes(codTipo)) {
-      if (atraso >= PLAZO_JC) {
-        vencidos++;
-      } else if (atraso >= PLAZO_JC - PLAZO_AVISO) {
-        porVencer++;
-        alDia++;
-      } else {
-        alDia++;
-      }
+    // Asignar el plazo correspondiente según el tipo de solicitud
+    switch (tipoSolicitud) {
+      case 'Pensión Vejez':
+        plazo = PLAZO_PV;
+        break;
+      case 'Pensión Invalidez':
+        plazo = PLAZO_PI;
+        break;
+      case 'Jubilación Común':
+        plazo = PLAZO_JC;
+        break;
+      default:
+        plazo = PLAZO_JC; // Manejar otros tipos como Jubilación Común por defecto
+        break;
+    }
+
+    // Clasificar los trámites según el atraso y el plazo
+    if (atraso >= plazo) {
+      vencidos++;
+    } else if (atraso >= plazo - PLAZO_AVISO) {
+      porVencer++;
+    } else {
+      alDia++;
     }
 
     pendientes++;
@@ -52,7 +59,6 @@ const ReporteRing = () => {
 
   return (
     <div className="reporte-ring">
-      
       <ul>
         <li>
           <strong>{pendientes}</strong> trámites pendientes
@@ -67,8 +73,6 @@ const ReporteRing = () => {
           <strong>{vencidos}</strong> trámites vencidos
         </li>
       </ul>
-    
-      
     </div>
   );
 };

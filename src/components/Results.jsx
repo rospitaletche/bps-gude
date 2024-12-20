@@ -21,8 +21,8 @@ const Results = () => {
   const PLAZO_JC = parseInt(import.meta.env.VITE_PLAZO_JC, 10);
   const PLAZO_PCUC = parseInt(import.meta.env.VITE_PLAZO_PCUC, 10);
   const PLAZO_AVISO = parseInt(import.meta.env.VITE_PLAZO_AVISO, 10);
-  const PLAZO_PV = parseInt(import.meta.env.VITE_PLAZO_PV, 10); // Plazo para PV
-  const PLAZO_PI = parseInt(import.meta.env.VITE_PLAZO_PI, 10); // Plazo para PV
+  const PLAZO_PV = parseInt(import.meta.env.VITE_PLAZO_PV, 10); // Plazo para Pensión Vejez
+  const PLAZO_PI = parseInt(import.meta.env.VITE_PLAZO_PI, 10); // Plazo para Pensión Invalidez
 
   const fechaActual = new Date();
 
@@ -34,7 +34,7 @@ const Results = () => {
   };
 
   const findNroDoc = (item) => {
-    // Busca una key que contenga 'nro_doc'
+    // Busca una key que contenga 'nro_doc' (ignorando mayúsculas y caracteres especiales)
     for (const key of Object.keys(item)) {
       if (key.toLowerCase().includes('nro_doc')) {
         return item[key];
@@ -53,25 +53,30 @@ const Results = () => {
         );
 
     return filtered.map((ringItem) => {
-      let codTipo = 1; // default jubilacion comun
+      let codTipo = 1; // default jubilación común
       let plazo = PLAZO_JC;
+      let tipoSolicitud = 'Jubilación Común'; // Default
 
       if (codTipoLogic) {
         const result = codTipoLogic(ringItem);
         codTipo = result.codTipo;
         plazo = result.plazo;
+        tipoSolicitud = result.tipoSolicitud;
       } else {
-        // Logica original del primer RING
+        // Lógica original del primer RING
         const cTipo = parseInt(ringItem['cod_tipo_solicitud'], 10);
         if (cTipo === 9) {
           codTipo = 9;
           plazo = PLAZO_PCUC;
-        } else if ([1, 25, 26].includes(cTipo)) {
+          tipoSolicitud = 'Incapacidad';
+        } else if ([1, 25, 26, 27].includes(cTipo)) {
           codTipo = cTipo; // mantiene codTipo 1,25,26 asimilable a JC
           plazo = PLAZO_JC;
+          tipoSolicitud = 'Jubilación Común';
         } else {
           codTipo = cTipo || 0;
           plazo = PLAZO_JC;
+          tipoSolicitud = 'Otro';
         }
       }
 
@@ -94,10 +99,10 @@ const Results = () => {
         : 0;
 
       let styleOption = '';
-      if (codTipo === 9) { // PCUC
+      if (codTipo === 9) { // Pensión Invalidez
         if (atraso >= plazo) styleOption = 'danger';
         else if (atraso >= plazo - PLAZO_AVISO) styleOption = 'info';
-      } else if ([1,25,26].includes(codTipo) || codTipo === 1) { // JC o PV asimilable a JC
+      } else if ([1, 25, 26, 27].includes(codTipo) || codTipo === 1) { // JC o Pensión Vejez
         if (atraso >= plazo) styleOption = 'danger';
         else if (atraso >= plazo - PLAZO_AVISO) styleOption = 'info';
       }
@@ -117,20 +122,21 @@ const Results = () => {
         desc_tipo_solic: ringItem['desc_tipo_solic'] || '',
         cod_tipo_solicitud: codTipo.toString(),
         styleOption,
+        tipo_solicitud: tipoSolicitud, // Nuevo campo
       };
     });
   };
 
-  // Función para lógica PV
+  // Función para lógica PV (Pensión Vejez)
   const codTipoLogicPV = () => {
     // PV = codTipo = 1 (asimilar JC), plazo = PLAZO_PV
-    return { codTipo: 1, plazo: PLAZO_PV };
+    return { codTipo: 1, plazo: PLAZO_PV, tipoSolicitud: 'Pensión Vejez' };
   };
 
-  // Función para lógica PI
+  // Función para lógica PI (Pensión Invalidez)
   const codTipoLogicPI = () => {
-    // PI = codTipo = 9 (PCUC), plazo = PLAZO_PCUC
-    return { codTipo: 9, plazo: PLAZO_PCUC };
+    // PI = codTipo = 9 (Pensión Invalidez), plazo = PLAZO_PI
+    return { codTipo: 9, plazo: PLAZO_PI, tipoSolicitud: 'Pensión Invalidez' };
   };
 
   useEffect(() => {
@@ -152,6 +158,7 @@ const Results = () => {
 
       setTimeout(() => {
         dispatch(setProcessedData(combined));
+        dispatch(setProcessingData(false));
       }, 500);
     }
   }, [ringData, ringPVData, ringPIData, apiaData, department, dispatch]);
